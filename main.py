@@ -1,22 +1,13 @@
 import spacy as sp
-from spacy import displacy
 from model.script_line import ScriptLine
-import csv
+from data import data_reader as dr
 
 nlp = sp.load('en')
 
 if __name__ == "__main__":
 
-    # Load first 100 records
-    data = []
-    with open('data/simpsons_script_lines.csv') as csvfile:
-        readCSV = csv.reader(csvfile, delimiter=',')
-        i = 0
-        for row in readCSV:
-            i += 1
-            if (i == 1): continue  # Skip csv column header
-            data.append(row)
-            if (i > 100): break
+    # Load first 100 script lines
+    data = dr.get_script_lines(0, 100)
 
     # Basic processing of script lines
     for record in data:
