@@ -1,14 +1,14 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
-import sentiment.helper as hlp
+import sentimentGOP.helper as hlp
 
 import nltk
 from nltk.corpus import stopwords
 import pickle
 
-# Load sentiment training data
-data = pd.read_csv('model/sentiment.csv')
-data = data[['text', 'sentiment']]
+# Load sentimentGOP training data
+data = pd.read_csv('model/sentimentGOP.csv')
+data = data[['text', 'sentimentGOP']]
 
 # split test set and drop neutral sentiments
 train, test = train_test_split(data, test_size=0.1)
@@ -27,9 +27,9 @@ for index, row in train.iterrows():
 	words_without_stopwords = [word for word in words_cleaned if not word in stopwords_set]
 	tweets.append((words_cleaned, row.sentiment))
 
-test_pos = test[test['sentiment'] == 'Positive']
+test_pos = test[test['sentimentGOP'] == 'Positive']
 test_pos = test_pos['text']
-test_neg = test[test['sentiment'] == 'Negative']
+test_neg = test[test['sentimentGOP'] == 'Negative']
 test_neg = test_neg['text']
 
 def get_words_in_tweets(doc):

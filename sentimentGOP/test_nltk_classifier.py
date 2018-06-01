@@ -1,7 +1,7 @@
 import pickle
 from model.script_line import ScriptLine
 from data import data_reader as dr
-from sentiment import helper as hlp
+from sentimentGOP import helper as hlp
 from nltk.corpus import stopwords
 
 # Load classifier

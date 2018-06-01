@@ -1,7 +1,7 @@
-import spacy as sp
 from model.script_line import ScriptLine
 from data import data_reader as dr
 
+import spacy as sp
 nlp = sp.load('en')
 
 if __name__ == "__main__":
