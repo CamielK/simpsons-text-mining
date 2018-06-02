@@ -12,9 +12,13 @@ Performance is not very good, script lines are mostly tagged as negative (~90%)
 ### vaderSentiment
 vaderSentiment.py uses the nltk vader package to do sentiment analysis. The original data is tagged with these sentiment values.
 
-## Data
-Source: https://kaggle.com/wcukierski/the-simpsons-by-the-data (Author: Todd Schneider)
-
 ## Requirements
 - Python 3.x
 - nltk (download models: en, vader)
+
+## Character covabulary
+Analysis of character vocabulary using TF-IDF and Word2Vec.
+##### NOTE: Use python 2.7 to run the vocabulary analysis (with Gensim installed).
+
+## Data
+Source: https://kaggle.com/wcukierski/the-simpsons-by-the-data (Author: Todd Schneider)

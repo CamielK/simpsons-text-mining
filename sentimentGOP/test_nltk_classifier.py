@@ -29,8 +29,16 @@ for record in data:
 	# script_lines_raw.append(words_without_stopwords)
 
 w_features = hlp.get_word_features(get_words_in_script_lines(script_lines_raw)) # create a list of all word features in the corpus
+counts = {
+	'Negative': 0,
+	'Positive': 0,
+}
 for record in data:
 	script_line = ScriptLine(record)
 	if (len(script_line.spoken_words.split()) > 5): # Only apply classifier if sentence has more then 5 tokens
 		res = classifier.classify(hlp.extract_features(script_line.spoken_words.split(), w_features))
+		counts[res] += 1
 		print('%-12s%-12s' % (res, script_line.spoken_words))
+
+print('Final results:')
+print(counts)
