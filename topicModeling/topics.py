@@ -19,12 +19,21 @@ class ScriptLine(object):
 		self.tokens = cleaned_tokens
 
 
-class Character(object):
-	def __init__(self, csv_line):
-		self.id = csv_line[0]
-		self.name = csv_line[1]
-		self.normalized_name = csv_line[2]
-		self.gender = csv_line[3]
+class Episode(object):
+    def __init__(self, csv_line):
+        self.id                     = csv_line[0]
+        self.title                  = csv_line[1]
+        self.original_air_date      = csv_line[2]
+        self.production_code        = csv_line[3]
+        self.season                 = csv_line[4]
+        self.number_in_season       = csv_line[5]
+        self.number_in_series       = csv_line[6]
+        self.us_viewers_in_millions = csv_line[7]
+        self.views                  = csv_line[8]
+        self.imdb_rating            = csv_line[9]
+        self.imdb_votes             = csv_line[10]
+        self.image_url              = csv_line[11]
+        self.video_url              = csv_line[12]
 
 
 import csv
@@ -32,14 +41,11 @@ import sys
 import os
 import gensim
 from gensim import corpora, models, similarities
-from PhraseVector import PhraseVector
 import nltk
 from nltk import word_tokenize
 from nltk.corpus import stopwords
 import string
 import operator
-from os import path
-from wordcloud import WordCloud
 
 nltk.download('punkt')
 
@@ -55,20 +61,20 @@ with open("../data/simpsons_script_lines.csv") as f:
 	for r in reader:
 		script_line = ScriptLine(r)
 		if script_line.spoken_words != "":
-			cleaned_tokens = [i for i in word_tokenize(script_line.spoken_words.lower().decode('utf-8')) if i not in stop and len(i) > 2]
+			cleaned_tokens = [i for i in word_tokenize(script_line.spoken_words.lower().decode('utf-8')) if i not in stop and len(i) > 3]
 			script_line.setPreprocessed(cleaned_tokens)
 			script_lines_raw.append(cleaned_tokens)
 		script_lines.append(script_line)
 
-# Read characters
-print("Reading characters")
+# Read episodes
+print("Reading episodes")
 characters = []
-with open("characters_main.csv") as f: # only main cast
-# with open("../data/simpsons_characters.csv") as f: # all characters
+# with open("characters_main.csv") as f: # only main cast
+with open("../data/simpsons_episodes.csv") as f: # all characters
 	reader = csv.reader(f)
 	next(reader)  # skip header
 	for r in reader:
-		characters.append(Character(r))
+		characters.append(Episode(r))
 
 # Create dictionary
 print("Creating dictionary")
@@ -85,15 +91,28 @@ print("Creating TF-IDF model")
 tfidf = models.TfidfModel(corpus)
 corpus_tfidf = tfidf[corpus]
 
-# Load pretrained word2vec model
-print >> sys.stderr, 'Preloading word2vec model...'
-basepath = os.path.dirname(__file__)
-filepath = os.path.abspath(os.path.join(basepath, "model/GoogleNews-vectors-negative300.bin"))
-wordvec_model = gensim.models.keyedvectors.KeyedVectors.load_word2vec_format(filepath, binary=True)
+num_topics = 10
+# Build LSA model
+print("LSA Model:")
+lsa_model = models.LsiModel(corpus_tfidf, id2word=dictionary, num_topics=num_topics)
+for topic in range(num_topics):
+	words = lsa_model.show_topic(topic)
+	words_str = ''
+	for word in words:
+		words_str += ' ' + word[0]
+	print('topic ' + str(topic) + ': ' + words_str)
 
-# Create new word2vec model based on all script lines
-# from gensim.models import Word2Vec
-# wordvec_model = Word2Vec(script_lines_raw)
+# Build LDA model
+print("LDA Model:")
+lda_model = models.ldamodel.LdaModel(corpus=corpus_tfidf, id2word=dictionary, num_topics=num_topics, update_every=1, chunksize=10000, passes=1)
+for topic in range(num_topics):
+	words = lda_model.get_topic_terms(topic)
+	words_str = ''
+	for word in words:
+		words_str += ' ' + dictionary[word[0]]
+	print('topic ' + str(topic) + ': ' + words_str)
+
+print()
 
 def getScriptLinesForCharacter(character_id):
 	char_lines = []
@@ -146,7 +165,7 @@ for character in characters:
 	character_words = []
 	i = 0
 	for token in sorted_tokens:
-		if i < 1000:
+		if i < 500:
 			# Get top 30 words
 			character_words.append(dictionary.get(token[0]))
 		i += 1
@@ -155,7 +174,7 @@ for character in characters:
 	character_most_used = []
 	i = 0
 	for token in sorted_tfs:
-		if i < 1000:
+		if i < 500:
 			# Get top 30 words
 			character_most_used.append(dictionary.get(token[0]))
 		i += 1
@@ -170,32 +189,6 @@ for character in characters:
 		'tf': character_most_used,
 		'w2v': character_word2vec
 	}
-
-	# Wordcloud
-	wordcloud_text = ''
-	for token in char_lines_raw.split():
-		if len(token) > 2 and token.find("'") == -1:
-			wordcloud_text += ' ' + token
-
-	wordcloud = WordCloud().generate(wordcloud_text)
-
-	# Display the generated image:
-	# the matplotlib way:
-	import matplotlib.pyplot as plt
-	plt.figure()
-	plt.imshow(wordcloud, interpolation='bilinear')
-	plt.axis("off")
-	plt.title(character.name)
-	plt.show()
-
-	# lower max_font_size
-	# wordcloud = WordCloud(max_font_size=40).generate(char_lines_raw)
-	# plt.figure()
-	# plt.imshow(wordcloud, interpolation="bilinear")
-	# plt.axis("off")
-	# plt.show()
-
-	print()
 
 
 # Print results
@@ -226,9 +219,9 @@ from matplotlib import cm as cm
 
 cmap = cm.get_cmap('YlGnBu')
 
-fig, ax = plt.subplots(figsize=(11, 11))
+fig, ax = plt.subplots(figsize=(20, 20))
 cax = ax.matshow(similarity_char_matrix, interpolation='nearest', cmap=cmap)
-ax.grid(False)
+ax.grid(True)
 # plt.title('Simpsons Character Similarity matrix')
 plt.xticks(range(len(labels)), labels, rotation=90)
 plt.yticks(range(len(labels)), labels)
